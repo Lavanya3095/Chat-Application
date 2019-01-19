@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html>
+<link rel="stylesheet" href="/static/style.css" type="text/css">
+<link rel="stylesheet" media="screen" href = "{{ url_for('static', filename='bootstrap.min.css') }}">
+<meta name="viewport" content = "width=device-width, initial-scale=1.0">
+<script
+  src="https://code.jquery.com/jquery-3.3.1.min.js"
+  integrity="sha256-FgpCb/KJQlLNfOu91ta32o/NMZxltwRo8QtmkMRdAu8="
+  crossorigin="anonymous"></script>
+<body style="background-image: url('{{ url_for('static', filename='img/img4.jpg') }}') !important;background-size: 100% 150%;">
+{% block body %}
+{% if session['bob_logged_in'] %}
+	<p>You're logged in already!</p>
+{% else %}
+
+<form action="/Bob" method="POST">
+	<div class="login">
+		<div class="login-screen">
+			<div class="app-title">
+				<h3 style="color: #ffffff;font-weight: bold;font-style: italic;" class="loginLabel">BOB Login</h3>
+			</div>
+
+			<div class="login-form">
+
+				<div class="row" style="margin-top: 15px">
+					<div class="col-xs-12" style="text-align: left">
+    	                <label>USERNAME:</label>
+        	            <input type="text" name="username" placeholder="Enter username" autocomplete="off" class="form-control" required>
+					</div>
+				</div>
+
+				<div class="row" style="margin-top: 10px;">
+					<div class="col-xs-12" style="text-align: left">
+						<label>PASSWORD:</label>
+						<input type="password" class="form-control" placeholder="Enter password" name="password" required>
+					</div>
+				</div>
+
+				<div class="row" style="margin-top: 20px">
+					<div class="col-xs-6" style="padding: 7px;">
+						<span>New User?</span> <a style="width: 125px; font-weight: bold; color: #0066aa;" href="/register">Register</a>
+					</div>
+
+					<div class="col-xs-6">
+						<button type="button" class="btn btn-primary login_btn"><b>SIGN IN</b></button>
+					</div>
+				</div>
+
+				<div class="row" id="error" style="margin-top: 10px; color: #e81616;display: none">
+					<span><b id="errortext"></b></span>
+				</div>
+			    <br>
+			</div>
+		</div>
+	</div>
+</form>
+<script>
+$(function() {
+        $('.login_btn').click(function () {
+            $.ajax({
+                url: '/Bob',
+                data: $('form').serialize(),
+                type: 'POST',
+                success: function (response) {
+                    console.log(response)
+                    if (response == "wrong username / password") {
+                        $('#error').css('display', 'block')
+						$('#errortext').text(response)
+                    } else {
+                        window.location.href = "/BobLoginPage"
+                        $('#error').css('display', 'block')
+						$('#errortext').text("")
+					}
+                },
+                error: function (error) {
+                    console.log(error);
+                }
+            })
+        })
+    });
+</script>
+
+
+{% endif %}
+{% endblock %}
+</body>
+</html>

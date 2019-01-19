@@ -1,0 +1,79 @@
+ <!DOCTYPE html>
+  <html lang="en">
+  <head>
+    <title>Flask Chat Application</title>
+      <link rel="stylesheet" href="/static/style.css" type="text/css">
+<link rel="stylesheet" media="screen" href = "{{ url_for('static', filename='bootstrap.min.css') }}">
+<meta name="viewport" content = "width=device-width, initial-scale=1.0">
+
+  </head>
+  <body style="background-image: url('{{ url_for('static', filename='img/img1.jpg') }}') !important;">
+
+    <h3 style='color: #ccc;font-size: 30px;'>No message yet..</h3>
+    <div class="message_holder"></div>
+
+    <form action="" method="POST">
+      <!--<input type="text" class="username" placeholder="User Name"/>-->
+      <!--<input type="text" class="message" placeholder="Messages"/>-->
+      <!--<input type="submit"/>-->
+      <div id="chatBox">
+          <div class="panel panel-default">
+              <div class="panel-heading" id="panel_Heading">Chat Box <span class="removeChatBox"><span
+                  class="glyphicon glyphicon-remove"/></span> <span class="removeChatBox"><span glyph="
+glyphicon glyphicon-minus"/> </span></div>
+              <div class="panel-body" id="panelBody">
+                  <div id="chatMessages">
+
+                  </div>
+              </div>
+              <div class="panel-footer" id="panelFooter">
+                  <div class="form-group">
+                      <input type="text" class="username" placeholder="User Name" value="Alice" style="display: none"/>
+                      <textarea type="text" class="form-control message" placeholder="Start Messaging"></textarea>
+                      <button class="btn sendButton">Send</button>
+                  </div>
+              </div>
+          </div>
+      </div>
+    </form>
+
+    <!-- jQuery (necessary for Bootstrap's JavaScript plugins) -->
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.12.4/jquery.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/1.7.3/socket.io.min.js"></script>
+    <script type="text/javascript">
+      var socket = io.connect('http://' + document.domain + ':' + location.port);
+      socket.on( 'connect', function() {
+        socket.emit( 'my event', {
+          data: 'User Connected'
+        } )
+        var form = $( 'form' ).on( 'submit', function( e ) {
+          e.preventDefault()
+          let user_name = $( 'input.username' ).val()
+          let user_input = $( 'input.message' ).val()
+            if(user_name.equalsIgnoreCase("Alice")) {
+                socket.emit( 'Alice event', {
+                    user_name : user_name,
+                    message : user_input
+                } )
+            }
+            else {
+                socket.emit( 'Bob event', {
+                    user_name : user_name,
+                    message : user_input
+                } )
+            }
+
+          $( 'input.message' ).val( '' ).focus()
+        } )
+      } )
+      socket.on( 'my response', function( msg ) {
+        console.log( msg )
+        if( typeof msg.user_name !== 'undefined' ) {
+          $( 'h3' ).remove()
+          $( 'div.message_holder' ).append( '<div><b style="color: #000">'+msg.user_name+'</b> '+msg.message+'</div>' )
+        }
+      })
+    </script>
+
+  </body>
+  </html>

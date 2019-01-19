@@ -1,0 +1,235 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <title>Flask Chat Application</title>
+    <link rel="stylesheet" href="/static/style.css" type="text/css">
+    <link rel="stylesheet" media="screen" href="{{ url_for('static', filename='bootstrap.min.css') }}">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+</head>
+<body style="background-image: url('{{ url_for('static', filename='img/img1.jpg') }}') !important;">
+<button class="logout" style="float: right" class="logout"><img src="\static\img\logout.png" width="30" height="30">
+</button>
+<form action="" method="POST" id="alice_form">
+    <div id="chatBox">
+        <div class="panel panel-default">
+            <div class="panel-heading" id="panel_Heading">Alice Chat Box</div>
+            <div class="panel-body" id="panelBody">
+                <div id="chatMessages">
+                    <h3 style='color: #ccc;font-size: 30px;'>No message yet..</h3>
+                    <div class="message_holder"></div>
+                </div>
+            </div>
+            <div class="panel-footer" id="panelFooter">
+                <div class="form-group">
+                    <input type="text" class="username" placeholder="User Name" value="Alice" style="display: none"/>
+                    <textarea type="text" class="form-control message" placeholder="Start Messaging"></textarea>
+                    <button class="btn sendButton">Send</button>
+                    <a href="#" id="camera_icon" data-toggle="modal" data-target="#myModal"><img src="\static\img\camera.png" width="40"
+                                                                                height="40" class="camera"></a>
+
+                </div>
+            </div>
+        </div>
+    </div>
+</form>
+
+<div id="myModal" class="modal fade" role="dialog">
+    <div class="modal-dialog">
+        <!-- Modal content-->
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal">&times;</button>
+                <h4 class="modal-title"><b>Upload file</b></h4>
+            </div>
+            <div class="modal-body">
+                <div class="row margin">
+                    <div class="col-xs-8">
+                        <input type="file" name="file" class="fileUpload form-control"/>
+                    </div>
+                    <div class="col-xs-2">
+                        <button type="type" class="btn btn-success uploadFile" style="float: right" data-dismiss="modal">Upload</button>
+                    </div>
+                </div>
+
+                <div class="row">
+                    <div class="col-xs-12" style="text-align: center">
+                        <img id="uploadedImage" src="#" alt="your image" style="display: none" width="300" height="300"/>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/1.12.4/jquery.min.js"></script>
+<script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/1.7.3/socket.io.min.js"></script>
+
+<script type="text/javascript">
+
+    function displayMessages(msg) {
+        $('h3').remove()
+        var str =  msg.message.split(',');
+        if (msg.user_name == 'Alice') {
+            if (str.length && (str[0] == "data:image/jpeg;base64" || str[0] == "data:image/png;base64"))
+                $('div.message_holder').append('<div class="form-group"><div class="row"><div class="col-xs-2"><img src="/static/img/alice.png" alt="alice" width="35" height="35" style="border-radius: 50%"></div><div class="col-xs-10"><div class="msg" style="color: white; background: #186d61"><img src="' + msg.message+ '" width="100" height="100"/></div></div></div></div>')
+            else
+                $('div.message_holder').append('<div class="form-group"><div class="row"><div class="col-xs-2"><img src="/static/img/alice.png" alt="alice" width="35" height="35" style="border-radius: 50%"></div><div class="col-xs-10"><div class="msg" style="color: white; background: #186d61">' + msg.message + '</div></div></div></div>')
+        } else {
+            if (str.length && (str[0] == "data:image/jpeg;base64"  || str[0] == "data:image/png;base64"))
+                $('div.message_holder').append('<div class="form-group"><div class="row"><div class="col-xs-10"><div class="msg" style="float: right;"><img src="' + msg.message+ '" width="100" height="100"/></div></div><div class="col-xs-2" style="padding: 0;"><img src="/static/img/bob.png" alt="bob" width="35" height="35" style="border-radius: 50%;"></div></div></div>')
+            else
+                $('div.message_holder').append('<div class="form-group"><div class="row"><div class="col-xs-10"><div class="msg" style="float: right;">' + msg.message + '</div></div><div class="col-xs-2" style="padding: 0;"><img src="/static/img/bob.png" alt="bob" width="35" height="35" style="border-radius: 50%;"></div></div></div>')
+        }
+
+    }
+
+    var socket = io.connect('http://' + document.domain + ':' + location.port);
+    socket.on('connect', function () {
+        socket.emit('Alice event', {
+            data: 'User Connected'
+        })
+
+        if (localStorage.getItem("AliceMessages") === null) {
+            localstorage = [];
+            localStorage.setItem("AliceMessages", JSON.stringify(localstorage));
+        }
+        var form = $('form').on('submit', function (e) {
+            e.preventDefault();
+            let user_name = $('input.username').val();
+            let user_input = $('textarea.message').val();
+            if (user_input.length != 0) {
+                dataObj = {
+                    user_name: user_name,
+                    message: user_input
+                }
+                socket.emit('Alice event', dataObj)
+            }
+            $('textarea.message').val('').focus()
+        })
+    })
+
+    socket.on('alice response', function (msg) {
+        $(".panel-body").animate({scrollTop: $('.message_holder').height()});
+        $(".message").val('');
+        if (typeof msg.user_name !== 'undefined') {
+            localstorage = JSON.parse(localStorage.getItem("AliceMessages"))
+            localstorage.push(msg)
+            localStorage.setItem("AliceMessages", JSON.stringify(localstorage));
+            displayMessages(msg)
+        }
+    });
+
+    socket.on('alice response 1', function (msg) {
+        $(".panel-body").animate({scrollTop: $('.message_holder').height()});
+        $(".message").val('');
+        if (typeof msg.user_name !== 'undefined') {
+            localstorage = JSON.parse(localStorage.getItem("AliceMessages"))
+            localstorage.push(msg)
+            localStorage.setItem("AliceMessages", JSON.stringify(localstorage));
+            //displayMessages(msg)
+            $.ajax({
+                url: '/decryptBobMsg',
+                data: {'msg': JSON.stringify(msg.message)},
+                type: 'POST',
+                success: function (response) {
+                    console.log(response)
+                },
+                error: function (error) {
+                    console.log(error);
+                }
+            });
+        }
+    })
+
+    socket.on('alice response 2', function (msg) {
+        $(".panel-body").animate({scrollTop: $('.message_holder').height()});
+        $(".message").val('');
+        msg = {
+            user_name: 'Bob',
+            message: msg
+        }
+        if (typeof msg.user_name !== 'undefined') {
+            localstorage = JSON.parse(localStorage.getItem("AliceMessages"))
+            localstorage.push(msg)
+            localStorage.setItem("AliceMessages", JSON.stringify(localstorage));
+            displayMessages(msg)
+        }
+    })
+
+    $('textarea').keyup(function (event) {
+        if (event.keyCode == 13) {
+            var msg = $("textarea").val();
+            $("textarea").val(msg.substr(0, msg.length - 1));
+            $("#alice_form").submit();
+        }
+    });
+
+    $(function () {
+        //localStorage.setItem("AliceMessages",  JSON.stringify([]));
+        locStr = JSON.parse(localStorage.getItem("AliceMessages"));
+        locStr.forEach(function (msg) {
+            if (typeof msg.user_name !== 'undefined') {
+                displayMessages(msg)
+            }
+        })
+        $(".panel-body").animate({scrollTop: $('.message_holder').height()});
+        $('.logout').click(function () {
+            $.ajax({
+                url: '/aliceLogout',
+                type: 'GET',
+                success: function (response) {
+                    var url = window.location;
+                    var baseUrl = url.protocol + "//" + url.host + "/" + "AliceLoginPage"
+                    window.location.href = baseUrl;
+                },
+                error: function (error) {
+                    console.log(error);
+                }
+            });
+        });
+
+        $('input[type=file]').change(function() {
+        if (this.files && this.files[0]) {
+            var reader = new FileReader();
+
+            reader.onload = function(e) {
+              $('#uploadedImage').attr('src', e.target.result);
+            }
+
+            reader.readAsDataURL(this.files[0]);
+            console.log($('#uploadedImage')[0].ownerDocument.images[0].currentSrc)
+            $('#uploadedImage').css('display', 'inline-block');
+          } else {
+             $('#uploadedImage').css('display', 'none')
+          }
+        });
+
+        $('.uploadFile').click(function () {
+            $.ajax({
+                url: '/uploadImage',
+                data: {'src': JSON.stringify($('#uploadedImage')[0].currentSrc)},
+                type: 'POST',
+                success: function (response) {
+                    setTimeout(function () {
+                        $("textarea").val(JSON.parse(response)).focus()
+                    }, 1000)
+
+                },
+                error: function (error) {
+                    console.log(error);
+                }
+            });
+        });
+
+        $('#camera_icon').click(function () {
+            $('input[type=file]').val('');
+            $('#uploadedImage').css('display', 'none')
+        })
+    });
+
+</script>
+
+</body>
+</html>
